@@ -11,10 +11,13 @@ import '../widgets/new_project_fab.dart';
 import '../widgets/add_project_sheet.dart';
 import '../widgets/bottom_nav.dart';
 
-import 'home_page.dart';
-import 'profile_page.dart';
-import 'notification_page.dart';
-import 'file_manager_page.dart';
+import '../pages/home_page.dart';
+import '../pages/profile_page.dart';
+import '../pages/notification_page.dart';
+import '../pages/file_manager_page.dart';
+
+// ke sub bab
+import 'task_management_page.dart';
 
 class ProjectManagementPage extends StatefulWidget {
   const ProjectManagementPage({super.key});
@@ -122,7 +125,17 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
                             ..._visibleProjects().map(
                               (p) => Padding(
                                 padding: const EdgeInsets.only(bottom: 18),
-                                child: ProjectCard(item: p),
+                                child: ProjectCard(
+                                  item: p,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => TaskManagementPage(projectTitle: p.title),
+                                      ),
+                                    );
+                                  },
+                                )
                               ),
                             ),
                           ],
@@ -134,7 +147,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
             // FAB “New Project” card style
             Positioned(
               right: 16,
-              bottom: 78,
+              bottom: 18,
               child: NewProjectFab(
                 onTap: () async {
                   final created = await _openAddProject(context);
@@ -233,7 +246,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
       barrierLabel: 'add-project',
       barrierColor: Colors.black.withOpacity(0.25),
       transitionDuration: const Duration(milliseconds: 180),
-      pageBuilder: (_, _, _) {
+      pageBuilder: (_, __, ___) {
         return Stack(
           children: [
             BackdropFilter(
@@ -252,7 +265,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
           ],
         );
       },
-      transitionBuilder: (_, anim, _, child) {
+      transitionBuilder: (_, anim, __, child) {
         final curved = Curves.easeOut.transform(anim.value);
         return Transform.scale(
           scale: 0.96 + (0.04 * curved),

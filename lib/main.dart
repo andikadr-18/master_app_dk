@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/project_management_page.dart';
+import 'projects/project_management_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

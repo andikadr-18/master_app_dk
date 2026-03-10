@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'feature_page.dart';
+import 'file_manager_page.dart';
+import '../projects/project_management_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -192,12 +196,36 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildMenuGrid() {
     final items = [
-      _MenuItem(Icons.insert_drive_file_outlined, 'file manager'),
-      _MenuItem(Icons.assignment_outlined, 'project management'),
-      _MenuItem(Icons.inventory_2_outlined, 'inventory'),
-      _MenuItem(Icons.calendar_today_outlined, 'notes'),
-      _MenuItem(Icons.payments_outlined, 'finance'),
-      _MenuItem(Icons.grid_view_rounded, 'service all'),
+      _MenuItem(
+        Icons.insert_drive_file_outlined,
+        'File Manager',
+        (_) => const FileManagerPage(),
+      ),
+      _MenuItem(
+        Icons.assignment_outlined,
+        'Project Management',
+        (_) => const ProjectManagementPage(),
+      ),
+      _MenuItem(
+        Icons.inventory_2_outlined,
+        'Inventory',
+        (_) => const FeaturePage(title: 'Inventory'),
+      ),
+      _MenuItem(
+        Icons.calendar_today_outlined,
+        'Notes',
+        (_) => const FeaturePage(title: 'Notes'),
+      ),
+      _MenuItem(
+        Icons.payments_outlined,
+        'Finance',
+        (_) => const FeaturePage(title: 'Finance'),
+      ),
+      _MenuItem(
+        Icons.grid_view_rounded,
+        'Service All',
+        (_) => const FeaturePage(title: 'Service All'),
+      ),
     ];
 
     return GridView.builder(
@@ -212,37 +240,45 @@ class _HomePageState extends State<HomePage> {
       ),
       itemBuilder: (context, index) {
         final item = items[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: soft,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: border),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () {},
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(item.icon, size: 30, color: Colors.black87),
-                  const SizedBox(height: 10),
-                  Text(
-                    item.label,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        return _buildMenuTile(item);
       },
+    );
+  }
+
+  Widget _buildMenuTile(_MenuItem item) {
+    return Container(
+      decoration: BoxDecoration(
+        color: soft,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: item.pageBuilder),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(item.icon, size: 30, color: Colors.black87),
+              const SizedBox(height: 10),
+              Text(
+                item.label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -572,7 +608,8 @@ class _HomePageState extends State<HomePage> {
 class _MenuItem {
   final IconData icon;
   final String label;
+  final WidgetBuilder pageBuilder;
 
-  _MenuItem(this.icon, this.label);
+  _MenuItem(this.icon, this.label, this.pageBuilder);
 }
 

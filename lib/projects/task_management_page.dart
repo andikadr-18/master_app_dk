@@ -347,7 +347,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      value: priority,
+                      initialValue: priority,
                       decoration: InputDecoration(
                         labelText: 'Priority',
                         border: OutlineInputBorder(

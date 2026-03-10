@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'projects/project_management_page.dart';
+import 'pages/home_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +18,7 @@ class AppRoot extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF3F9FF),
         fontFamily: 'Poppins',
       ),
-      home: const ProjectManagementPage(),
+      home: const HomePage(),
     );
   }
 }

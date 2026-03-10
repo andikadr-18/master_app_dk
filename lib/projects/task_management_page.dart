@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../pages/profile_page.dart'; // sesuaikan kalau path profile berbeda
 import 'note_management_page.dart';
+import 'document_management_page.dart';
 
 class TaskManagementPage extends StatefulWidget {
   final String projectTitle;
@@ -31,6 +32,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
   String _deadlineFilter = 'Deadline';
 
   late List<NoteItem> _notes;
+  late List<DocumentItem> _documents;
 
   final List<_TaskItem> _tasks = [
     _TaskItem(
@@ -39,7 +41,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
       deadline: '28 Feb 2026',
       priority: 'High',
       assignees: ['RA', 'FN', 'BK', 'DK'],
-      checked: false,
+      status: _TaskStatus.todo,
     ),
     _TaskItem(
       title: 'Renovasi Kantor',
@@ -47,7 +49,7 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
       deadline: '28 Feb 2026',
       priority: 'Medium',
       assignees: ['RA', 'FN', 'BK', 'DK'],
-      checked: false,
+      status: _TaskStatus.todo,
     ),
   ];
 
@@ -68,6 +70,23 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
         note: 'Show progress yang sudah dikerjakan selama\nseminggu',
         created: '20 Feb 2026',
         updated: '21 Feb 2026',
+      ),
+    ];
+
+    _documents = [
+      const DocumentItem(
+        fileName: 'RAB Renovasi',
+        uploadBy: 'Admin',
+        description: 'Rincian anggaran dan kebutuhan material.',
+        created: '17 Feb 2026',
+        updated: '18 Feb 2026',
+      ),
+      const DocumentItem(
+        fileName: 'Gambar Kerja',
+        uploadBy: 'Admin',
+        description: 'Revisi gambar kerja versi 2.',
+        created: '20 Feb 2026',
+        updated: '22 Feb 2026',
       ),
     ];
   }
@@ -105,13 +124,11 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 12),
-
                   _SegmentBar(
                     currentIndex: _segmentIndex,
                     onChanged: (i) => setState(() => _segmentIndex = i),
                   ),
                   const SizedBox(height: 12),
-
                   if (_segmentIndex == 0) ...[
                     Row(
                       children: [
@@ -122,7 +139,12 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                               final result = await _showPicker(
                                 context,
                                 title: 'Priority',
-                                options: const ['Priority', 'High', 'Medium', 'Low'],
+                                options: const [
+                                  'Priority',
+                                  'High',
+                                  'Medium',
+                                  'Low',
+                                ],
                               );
                               if (result != null) {
                                 setState(() => _priorityFilter = result);
@@ -138,7 +160,11 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                               final result = await _showPicker(
                                 context,
                                 title: 'Deadline',
-                                options: const ['Deadline', 'Nearest', 'Farthest'],
+                                options: const [
+                                  'Deadline',
+                                  'Nearest',
+                                  'Farthest',
+                                ],
                               );
                               if (result != null) {
                                 setState(() => _deadlineFilter = result);
@@ -150,15 +176,14 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                     ),
                     const SizedBox(height: 12),
                   ],
-
                   if (_segmentIndex == 0) ...[
                     ...visibleTasks.map(
                       (task) => Padding(
                         padding: const EdgeInsets.only(bottom: 14),
                         child: _TaskCard(
                           item: task,
-                          onChanged: (v) {
-                            setState(() => task.checked = v ?? false);
+                          onStatusChanged: (status) {
+                            setState(() => task.status = status);
                           },
                         ),
                       ),
@@ -170,9 +195,10 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                       onEdit: _handleEditNote,
                     ),
                   ] else ...[
-                    const _EmptySection(
-                      title: 'Belum ada document',
-                      subtitle: 'Document project akan tampil di sini.',
+                    ProjectDocumentsView(
+                      query: _searchC.text,
+                      documents: _documents,
+                      onEdit: _handleEditDocument,
                     ),
                   ],
                 ],
@@ -181,7 +207,6 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
           ],
         ),
       ),
-
       floatingActionButton: _segmentIndex == 0
           ? _AddActionButton(
               label: 'Add Task',
@@ -200,9 +225,13 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                   label: 'Add Note',
                   onTap: _handleAddNote,
                 )
-              : null),
+              : (_segmentIndex == 2
+                  ? _AddActionButton(
+                      label: 'Add Document',
+                      onTap: _handleAddDocument,
+                    )
+                  : null)),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
       bottomNavigationBar: _BottomNav(
         currentIndex: _bottomNavIndex,
         onTap: (i) {
@@ -357,7 +386,10 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                       ),
                       items: const [
                         DropdownMenuItem(value: 'High', child: Text('High')),
-                        DropdownMenuItem(value: 'Medium', child: Text('Medium')),
+                        DropdownMenuItem(
+                          value: 'Medium',
+                          child: Text('Medium'),
+                        ),
                         DropdownMenuItem(value: 'Low', child: Text('Low')),
                       ],
                       onChanged: (v) {
@@ -391,10 +423,12 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
                   _TaskItem(
                     title: titleC.text.trim(),
                     subtitle: subC.text.trim().isEmpty ? '-' : subC.text.trim(),
-                    deadline: deadlineC.text.trim().isEmpty ? '-' : deadlineC.text.trim(),
+                    deadline: deadlineC.text.trim().isEmpty
+                        ? '-'
+                        : deadlineC.text.trim(),
                     priority: priority,
                     assignees: const ['RA', 'FN', 'BK', 'DK'],
-                    checked: false,
+                    status: _TaskStatus.todo,
                   ),
                 );
               },
@@ -444,6 +478,42 @@ class _TaskManagementPageState extends State<TaskManagementPage> {
       _segmentIndex = 1;
     });
   }
+
+  Future<void> _handleAddDocument() async {
+    final created = formatDocumentDate(DateTime.now());
+    final doc = await showUpsertDocumentDialog(
+      context,
+      createdDefault: created,
+      navy: NAVY,
+    );
+    if (doc == null) return;
+
+    setState(() {
+      _documents = [doc, ..._documents];
+      _segmentIndex = 2;
+    });
+  }
+
+  Future<void> _handleEditDocument(DocumentItem existing) async {
+    final index = _documents.indexOf(existing);
+    if (index < 0) return;
+
+    final updated = formatDocumentDate(DateTime.now());
+    final result = await showUpsertDocumentDialog(
+      context,
+      existing: existing,
+      updatedValue: updated,
+      navy: NAVY,
+    );
+    if (result == null) return;
+
+    setState(() {
+      final copy = [..._documents];
+      copy[index] = result;
+      _documents = copy;
+      _segmentIndex = 2;
+    });
+  }
 }
 
 class _TaskItem {
@@ -452,7 +522,7 @@ class _TaskItem {
   final String deadline;
   final String priority;
   final List<String> assignees;
-  bool checked;
+  _TaskStatus status;
 
   _TaskItem({
     required this.title,
@@ -460,8 +530,38 @@ class _TaskItem {
     required this.deadline,
     required this.priority,
     required this.assignees,
-    required this.checked,
+    required this.status,
   });
+}
+
+enum _TaskStatus {
+  todo,
+  inProgress,
+  complecated,
+}
+
+extension on _TaskStatus {
+  String get label {
+    switch (this) {
+      case _TaskStatus.todo:
+        return 'To do';
+      case _TaskStatus.inProgress:
+        return 'In progress';
+      case _TaskStatus.complecated:
+        return 'Completed';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case _TaskStatus.todo:
+        return const Color(0xFF9CA3AF);
+      case _TaskStatus.inProgress:
+        return const Color(0xFF2563EB);
+      case _TaskStatus.complecated:
+        return const Color(0xFF16A34A);
+    }
+  }
 }
 
 class _TopBar extends StatelessWidget {
@@ -487,7 +587,10 @@ class _TopBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
           ),
           Expanded(
             child: Center(
@@ -597,7 +700,9 @@ class _SegmentBar extends StatelessWidget {
               child: Container(
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: active ? const Color(0xFF101D6E) : const Color(0xFFD9D9D9),
+                  color: active
+                      ? const Color(0xFF101D6E)
+                      : const Color(0xFFD9D9D9),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(isFirst ? 30 : 0),
                     bottomLeft: Radius.circular(isFirst ? 30 : 0),
@@ -665,14 +770,11 @@ class _FilterBox extends StatelessWidget {
 
 class _TaskCard extends StatelessWidget {
   final _TaskItem item;
-  final ValueChanged<bool?> onChanged;
-
-  static const Color NAVY = Color(0xFF101D6E);
-  static const Color MUTED = Color(0xFF5E5E5E);
+  final ValueChanged<_TaskStatus> onStatusChanged;
 
   const _TaskCard({
     required this.item,
-    required this.onChanged,
+    required this.onStatusChanged,
   });
 
   @override
@@ -689,20 +791,7 @@ class _TaskCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: Checkbox(
-                  value: item.checked,
-                  onChanged: onChanged,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  visualDensity: VisualDensity.compact,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  side: const BorderSide(color: Colors.black87, width: 1.4),
-                ),
-              ),
+              _StatusIcon(status: item.status, size: 28),
               const SizedBox(width: 10),
               Expanded(
                 child: Padding(
@@ -715,7 +804,7 @@ class _TaskCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          color: Color(0xFF111827),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -724,7 +813,7 @@ class _TaskCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: MUTED,
+                          color: Color(0xFF5E5E5E),
                           height: 1.25,
                         ),
                       ),
@@ -743,27 +832,34 @@ class _TaskCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Dikerjakan :',
+                      'Status :',
                       style: TextStyle(
-                        color: MUTED,
+                        color: Color(0xFF5E5E5E),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _AvatarStack(labels: item.assignees),
+                    _StatusPicker(
+                      value: item.status,
+                      onChanged: onStatusChanged,
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 14, color: MUTED),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 14,
+                    color: Color(0xFF5E5E5E),
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     item.deadline,
                     style: const TextStyle(
-                      color: MUTED,
+                      color: Color(0xFF5E5E5E),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -778,47 +874,189 @@ class _TaskCard extends StatelessWidget {
   }
 }
 
-class _AvatarStack extends StatelessWidget {
-  final List<String> labels;
+class _StatusPicker extends StatelessWidget {
+  final _TaskStatus value;
+  final ValueChanged<_TaskStatus> onChanged;
 
-  const _AvatarStack({required this.labels});
+  const _StatusPicker({
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    const colors = [
-      Color(0xFF3D7BFF),
-      Color(0xFF9B6DFF),
-      Color(0xFF22D98F),
-      Color(0xFFC44536),
-    ];
-
-    return SizedBox(
-      height: 22,
-      child: Stack(
-        children: List.generate(labels.length, (i) {
-          return Positioned(
-            left: i * 14,
-            child: Container(
-              width: 22,
-              height: 22,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: colors[i % colors.length],
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                labels[i],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 6.5,
-                  fontWeight: FontWeight.w700,
+    return PopupMenuButton<_TaskStatus>(
+      tooltip: 'Change status',
+      onSelected: onChanged,
+      itemBuilder: (context) {
+        return _TaskStatus.values
+            .map(
+              (s) => PopupMenuItem<_TaskStatus>(
+                value: s,
+                child: Row(
+                  children: [
+                    _StatusIcon(status: s, size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      s.label,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
                 ),
               ),
+            )
+            .toList();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: const Color(0xFF5E5E5E).withOpacity(0.35),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _StatusIcon(status: value, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              value.label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF111827),
+              ),
             ),
-          );
-        }),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.expand_more,
+              size: 18,
+              color: Color(0xFF5E5E5E),
+            ),
+          ],
+        ),
       ),
     );
+  }
+}
+
+class _StatusIcon extends StatelessWidget {
+  final _TaskStatus status;
+  final double size;
+
+  const _StatusIcon({
+    required this.status,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    switch (status) {
+      case _TaskStatus.todo:
+        return _DashedCircle(size: size, color: status.color, strokeWidth: 2);
+      case _TaskStatus.inProgress:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: status.color, width: 2),
+          ),
+          child: Center(
+            child: Container(
+              width: size * 0.36,
+              height: size * 0.36,
+              decoration: BoxDecoration(
+                color: status.color,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        );
+      case _TaskStatus.complecated:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: status.color, width: 2),
+          ),
+          child: Icon(Icons.check, size: size * 0.7, color: status.color),
+        );
+    }
+  }
+}
+
+class _DashedCircle extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double strokeWidth;
+
+  const _DashedCircle({
+    required this.size,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _DashedCirclePainter(
+        color: color,
+        strokeWidth: strokeWidth,
+        dashLength: 4,
+        gapLength: 3,
+      ),
+    );
+  }
+}
+
+class _DashedCirclePainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashLength;
+  final double gapLength;
+
+  const _DashedCirclePainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.dashLength,
+    required this.gapLength,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final rect = Offset.zero & size;
+    final path = Path()..addOval(rect.deflate(strokeWidth / 2));
+
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
+      while (distance < metric.length) {
+        double next = distance + dashLength;
+        if (next > metric.length) next = metric.length;
+        final segment = metric.extractPath(distance, next);
+        canvas.drawPath(segment, paint);
+        distance += dashLength + gapLength;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedCirclePainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.dashLength != dashLength ||
+        oldDelegate.gapLength != gapLength;
   }
 }
 
@@ -963,10 +1201,22 @@ class _BottomNav extends StatelessWidget {
       selectedItemColor: const Color(0xFF111827),
       unselectedItemColor: const Color(0xFF6B7280),
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Notification'),
-        BottomNavigationBarItem(icon: Icon(Icons.folder_open), label: 'File Manager'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_filled),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.notifications_none),
+          label: 'Notification',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.folder_open),
+          label: 'File Manager',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          label: 'Profile',
+        ),
       ],
     );
   }

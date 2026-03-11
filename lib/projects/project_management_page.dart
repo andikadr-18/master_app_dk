@@ -246,7 +246,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
       barrierLabel: 'add-project',
       barrierColor: Colors.black.withOpacity(0.25),
       transitionDuration: const Duration(milliseconds: 180),
-      pageBuilder: (_, __, ___) {
+      pageBuilder: (_, _, _) {
         return Stack(
           children: [
             BackdropFilter(
@@ -265,7 +265,7 @@ class _ProjectManagementPageState extends State<ProjectManagementPage> {
           ],
         );
       },
-      transitionBuilder: (_, anim, __, child) {
+      transitionBuilder: (_, anim, _, child) {
         final curved = Curves.easeOut.transform(anim.value);
         return Transform.scale(
           scale: 0.96 + (0.04 * curved),
